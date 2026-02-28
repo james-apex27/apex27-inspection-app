@@ -40,11 +40,14 @@ async function apiFetch(path, options = {}) {
     throw error;
   }
 
-  const contentType = response.headers.get('content-type');
-  if (contentType && contentType.includes('application/json')) {
-    return await response.json();
+  // Always try JSON first — Apex27 returns JSON regardless of what the
+  // Content-Type header says (e.g. global-search may return text/plain).
+  const text = await response.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
   }
-  return await response.text();
 }
 
 export const searchListings = async (searchTerm) => {
